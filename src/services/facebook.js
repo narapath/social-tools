@@ -103,6 +103,15 @@ class FacebookService {
     return true;
   }
 
+  setAccessToken(token) {
+    if (!token) throw new Error('Token is required');
+    this.accessToken = token;
+    localStorage.setItem('fb_access_token', token);
+    // When manually setting token, we don't know the expiry, 
+    // so we'll set it to 2 hours from now as a default (standard for short-lived tokens)
+    localStorage.setItem('fb_token_expires', Date.now() + 2 * 60 * 60 * 1000);
+  }
+
   logout() {
     this.accessToken = null;
     localStorage.removeItem('fb_access_token');

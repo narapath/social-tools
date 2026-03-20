@@ -2,12 +2,23 @@ import React, { useState } from 'react';
 import { FaFacebook, FaBolt, FaUsers, FaShieldAlt, FaKey, FaCheckCircle, FaChevronDown, FaChevronUp, FaExternalLinkAlt } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
-const FacebookLogin = ({ onLogin, sdkError }) => {
+const FacebookLogin = ({ onLogin, onManualToken, sdkError }) => {
   const [appId, setAppId] = useState(localStorage.getItem('fb_app_id') || '');
   const [showSettings, setShowSettings] = useState(!localStorage.getItem('fb_app_id'));
   const [showGuide, setShowGuide] = useState(false);
+  const [loginMethod, setLoginMethod] = useState('standard'); // 'standard' or 'manual'
+  const [manualToken, setManualToken] = useState('');
 
   const handleLoginClick = () => {
+    if (loginMethod === 'manual') {
+      if (!manualToken.trim()) {
+        alert('กรุณาวาง Access Token ก่อน');
+        return;
+      }
+      onManualToken(manualToken.trim());
+      return;
+    }
+
     if (!appId.trim()) {
       setShowSettings(true);
       alert('กรุณาใส่ Facebook App ID ก่อน (กดเปิด "ตั้งค่า App ID" ด้านล่าง)');
@@ -36,57 +47,120 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
           Supercharge your <br />
           <span className="gradient-text">Facebook Marketing</span>
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '550px', margin: '0 auto 40px auto' }}>
-          เชื่อมต่อ Facebook จริง ค้นหากลุ่มเป้าหมาย เข้ากลุ่มอัตโนมัติ และโพสต์ไปยังหลายกลุ่มพร้อมกัน
-        </p>
-
-        {/* Feature Icons */}
-        <div style={{ display: 'flex', gap: '40px', justifyContent: 'center', marginBottom: '50px', flexWrap: 'wrap' }}>
-          {[
-            { icon: <FaBolt size={22} />, label: 'เชื่อมต่อจริง', color: 'var(--primary)' },
-            { icon: <FaUsers size={22} />, label: 'ค้นหากลุ่ม', color: 'var(--secondary)' },
-            { icon: <FaShieldAlt size={22} />, label: 'ขอสิทธิ์อัตโนมัติ', color: '#00c853' },
-          ].map((f, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ color: f.color }}>{f.icon}</div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{f.label}</span>
-            </div>
-          ))}
+        
+        {/* Connection Tabs */}
+        <div style={{ 
+          display: 'inline-flex', background: 'rgba(255,255,255,0.05)', 
+          padding: '4px', borderRadius: '12px', marginBottom: '30px',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <button 
+            onClick={() => setLoginMethod('standard')}
+            style={{ 
+              padding: '10px 24px', borderRadius: '10px', fontSize: '0.9rem',
+              background: loginMethod === 'standard' ? 'var(--primary)' : 'transparent',
+              color: 'white', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease'
+            }}
+          >
+            มาตรฐาน (Redirect)
+          </button>
+          <button 
+            onClick={() => setLoginMethod('manual')}
+            style={{ 
+              padding: '10px 24px', borderRadius: '10px', fontSize: '0.9rem',
+              background: loginMethod === 'manual' ? 'var(--primary)' : 'transparent',
+              color: 'white', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease'
+            }}
+          >
+            ด่วน (ใช้ Token) ⚡
+          </button>
         </div>
 
-        {/* Main Facebook Login Button */}
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={handleLoginClick}
-          style={{
-            background: '#1877F2',
-            color: 'white',
-            border: 'none',
-            padding: '18px 50px',
-            borderRadius: '12px',
-            fontSize: '1.2rem',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '14px',
-            boxShadow: '0 4px 20px rgba(24, 119, 242, 0.5)',
-            transition: 'all 0.3s ease',
-            width: '100%',
-            maxWidth: '450px',
-            justifyContent: 'center'
-          }}
-        >
-          <FaFacebook size={26} />
-          เข้าสู่ระบบด้วย Facebook
-        </motion.button>
+        {loginMethod === 'standard' ? (
+          <div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '550px', margin: '0 auto 40px auto' }}>
+              เชื่อมต่อ Facebook จริง ค้นหากลุ่มเป้าหมาย เข้ากลุ่มอัตโนมัติ และโพสต์ไปยังหลายกลุ่มพร้อมกัน
+            </p>
+
+            {/* Main Facebook Login Button */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleLoginClick}
+              style={{
+                background: '#1877F2',
+                color: 'white',
+                border: 'none',
+                padding: '18px 50px',
+                borderRadius: '12px',
+                fontSize: '1.2rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '14px',
+                boxShadow: '0 4px 20px rgba(24, 119, 242, 0.5)',
+                transition: 'all 0.3s ease',
+                width: '100%',
+                maxWidth: '450px',
+                justifyContent: 'center'
+              }}
+            >
+              <FaFacebook size={26} />
+              เข้าสู่ระบบด้วย Facebook
+            </motion.button>
+          </div>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ maxWidth: '500px', margin: '0 auto' }}
+          >
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '20px' }}>
+              วาง Access Token จาก Graph API Explorer เพื่อเชื่อมต่อทันที
+            </p>
+            <div className="glass-card" style={{ padding: '20px', textAlign: 'left', marginBottom: '25px' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>
+                Facebook Access Token
+              </label>
+              <textarea 
+                rows="3"
+                placeholder="EAA..."
+                value={manualToken}
+                onChange={(e) => setManualToken(e.target.value)}
+                style={{ 
+                  width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px', color: 'white', padding: '12px', fontSize: '0.9rem',
+                  outline: 'none', resize: 'none'
+                }}
+              />
+              <button 
+                onClick={handleLoginClick}
+                className="btn-primary"
+                style={{ width: '100%', marginTop: '15px', padding: '15px' }}
+              >
+                เชื่อมต่อด้วย Token นี้ 🚀
+              </button>
+            </div>
+            
+            <a 
+              href="https://developers.facebook.com/tools/explorer/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: 'var(--primary)', fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              ไปเอา Token จาก Graph API Explorer <FaExternalLinkAlt size={12} />
+            </a>
+          </motion.div>
+        )}
 
         {/* Permissions info */}
-        <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+        <div style={{ marginTop: '30px', display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
           {[
             { label: 'โปรไฟล์', perm: 'public_profile' },
             { label: 'อีเมล', perm: 'email' },
+            { label: 'ข้อมูลกลุ่ม', perm: 'groups_access_member_info' },
+            { label: 'การจัดการกลุ่ม', perm: 'user_managed_groups' },
           ].map((p, i) => (
             <span key={i} style={{
               background: 'rgba(24, 119, 242, 0.15)',
@@ -102,9 +176,6 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
             </span>
           ))}
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '10px' }}>
-          กดปุ่มด้านบน → ระบบจะพาไปหน้า Facebook เพื่อขอสิทธิ์ → กลับมาที่เว็บนี้โดยอัตโนมัติ
-        </p>
 
         {sdkError && (
           <motion.div
@@ -131,7 +202,7 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
               borderRadius: '8px', transition: 'all 0.2s ease'
             }}
           >
-            <FaKey size={12} /> ตั้งค่า App ID {showSettings ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}
+            <FaKey size={12} /> ตั้งค่า App ID (วิธีมาตรฐาน) {showSettings ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}
           </button>
 
           {showSettings && (
@@ -164,7 +235,7 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
                   background: 'rgba(0, 200, 83, 0.1)', padding: '8px 14px', borderRadius: '8px',
                   marginBottom: '15px'
                 }}>
-                  <FaCheckCircle size={12} /> App ID บันทึกแล้ว — กดปุ่ม "เข้าสู่ระบบด้วย Facebook" ด้านบนได้เลย
+                  <FaCheckCircle size={12} /> App ID บันทึกแล้ว — กดปุ่มสถานะ "มาตรฐาน" แล้วกดล็อกอินได้เลย
                 </div>
               )}
 
@@ -180,9 +251,6 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
                 }}>
                   {window.location.origin + window.location.pathname}
                 </div>
-                <p style={{ marginTop: '8px', fontSize: '0.78rem' }}>
-                  คัดลอก URL นี้ไปวางใน Facebook App → Facebook Login → Settings → Valid OAuth Redirect URIs
-                </p>
               </div>
 
               {/* Guide */}
@@ -201,16 +269,10 @@ const FacebookLogin = ({ onLogin, sdkError }) => {
                   style={{ marginTop: '15px', padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}
                 >
                   <ol style={{ paddingLeft: '18px', color: 'var(--text-muted)', lineHeight: '2.2', fontSize: '0.85rem' }}>
-                    <li>ไปที่ <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>developers.facebook.com</a> <FaExternalLinkAlt size={10} style={{ verticalAlign: 'middle' }} /></li>
-                    <li>คลิก <strong style={{ color: 'white' }}>"My Apps"</strong> → <strong style={{ color: 'white' }}>"Create App"</strong></li>
-                    <li>เลือก Use case: <strong style={{ color: 'white' }}>"Other"</strong> → Type: <strong style={{ color: 'white' }}>"Consumer"</strong></li>
-                    <li>ตั้งชื่อ App → คลิก <strong style={{ color: 'white' }}>"Create App"</strong></li>
-                    <li>ที่หน้า Dashboard คลิก <strong style={{ color: 'white' }}>"Add Product"</strong> → เลือก <strong style={{ color: 'white' }}>"Facebook Login"</strong> → <strong style={{ color: 'white' }}>"Set Up"</strong></li>
-                    <li>ไปที่ <strong style={{ color: 'white' }}>"Facebook Login → Settings"</strong></li>
-                    <li>ใน <strong style={{ color: 'white' }}>Valid OAuth Redirect URIs</strong> → เพิ่ม URL: <code style={{ color: '#00d2ff', background: 'rgba(0,210,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{window.location.origin}/</code></li>
-                    <li>ไปที่ <strong style={{ color: 'white' }}>"Settings → Basic"</strong> → คัดลอก <strong style={{ color: '#00d2ff' }}>App ID</strong> มาวางที่ช่องด้านบน</li>
-                    <li>ที่ "App Domains" เพิ่ม <strong style={{ color: 'white' }}>localhost</strong></li>
-                    <li>กด <strong style={{ color: '#00c853' }}>Save Changes</strong> → กลับมากดปุ่ม "เข้าสู่ระบบด้วย Facebook" ได้เลย!</li>
+                    <li>ไปที่ <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>developers.facebook.com</a></li>
+                    <li>ที่หน้า Dashboard คลิก <strong style={{ color: 'white' }}>"Add Product"</strong> → เลือก <strong style={{ color: 'white' }}>"Facebook Login"</strong></li>
+                    <li>ใน <strong style={{ color: 'white' }}>Valid OAuth Redirect URIs</strong> → เพิ่ม URL: <code style={{ color: '#00d2ff' }}>{window.location.origin}/</code></li>
+                    <li>ไปที่ "Settings → Basic" คัดลอก App ID มาวางที่ช่องด้านบน</li>
                   </ol>
                 </motion.div>
               )}

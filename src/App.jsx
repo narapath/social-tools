@@ -86,6 +86,25 @@ const App = () => {
     }
   };
 
+  // ─── Manual Token Login ──────────────────────────────────
+  const handleManualToken = async (token) => {
+    setLoading(true);
+    setLoadingMsg('กำลังตรวจสอบ Token...');
+    setSdkError('');
+    try {
+      facebookService.setAccessToken(token);
+      await loadProfile();
+      showToast('เชื่อมต่อด้วย Token สำเร็จ!', 'success');
+    } catch (e) {
+      console.error('Manual token error:', e);
+      setSdkError(`Token ไม่ถูกต้องหรือหมดอายุ: ${e.message}`);
+      facebookService.logout();
+    } finally {
+      setLoading(false);
+      setLoadingMsg('');
+    }
+  };
+
   // ─── Logout ───────────────────────────────────────────────
   const handleLogout = () => {
     facebookService.logout();
@@ -176,6 +195,7 @@ const App = () => {
             >
               <FacebookLogin 
                 onLogin={handleLogin} 
+                onManualToken={handleManualToken}
                 sdkError={sdkError}
               />
             </motion.div>
