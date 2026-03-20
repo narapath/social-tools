@@ -202,6 +202,7 @@ const GroupSearch = ({ results, onSearch, isLoading, selectedGroups, onToggleSel
               onClick={onLoadMyGroups}
             >
               📋 โหลดกลุ่มของฉัน
+            </button>
           </div>
         </div>
       )}
