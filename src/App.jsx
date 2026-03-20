@@ -34,7 +34,9 @@ const App = () => {
           return;
         }
       } catch (e) {
-        setSdkError(e.message);
+        console.error('Redirect callback error:', e);
+        setSdkError(`เกิดข้อผิดพลาดจากการเชื่อมต่อ Facebook: ${e.message}. โปรดตรวจสอบว่าคุณได้ตั้งค่า Redirect URI ใน Facebook App ถูกต้องแล้ว`);
+        showToast('การเชื่อมต่อล้มเหลว', 'error');
       }
 
       // Check if we have a saved token
@@ -72,11 +74,15 @@ const App = () => {
 
   // ─── Login (redirect to Facebook) ────────────────────────
   const handleLogin = (appId) => {
+    if (!appId) {
+      setSdkError('กรุณาระบุ Facebook App ID ในส่วนการตั้งค่าด้านล่าง');
+      return;
+    }
+    setSdkError('');
     try {
       facebookService.startLogin(appId);
-      // Page will redirect to Facebook, no need to do anything else here
     } catch (e) {
-      setSdkError(e.message);
+      setSdkError(`ไม่สามารถเริ่มการเชื่อมต่อได้: ${e.message}`);
     }
   };
 

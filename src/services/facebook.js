@@ -10,7 +10,9 @@ const GRAPH_URL = `https://graph.facebook.com/${FB_API_VERSION}`;
 // Permissions to request
 const PERMISSIONS = [
   'public_profile',
-  'email'
+  'email',
+  'groups_access_member_info',
+  'user_managed_groups'
 ];
 
 class FacebookService {
@@ -44,12 +46,30 @@ class FacebookService {
 
   // Check if the URL contains a Facebook OAuth callback token
   handleRedirectCallback() {
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('access_token')) return null;
+    let hash = window.location.hash;
+    
+    // Facebook sometimes appends _=_ to the hash
+    if (hash === '#_=_') {
+      window.history.replaceState(null, '', window.location.pathname);
+      return null;
+    }
 
+    if (!hash || !hash.includes('access_token')) {
+      // Check query params as well, just in case
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('error')) {
+        const err = urlParams.get('error_description') || urlParams.get('error');
+        throw new Error(`Facebook Error: ${err}`);
+      }
+      return null;
+    }
+
+    // Parse hash fragment
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
     const expiresIn = params.get('expires_in');
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
 
     if (accessToken) {
       this.accessToken = accessToken;
@@ -58,16 +78,12 @@ class FacebookService {
         localStorage.setItem('fb_token_expires', Date.now() + parseInt(expiresIn) * 1000);
       }
 
-      // Clean the URL hash so the token isn't visible
+      // Clean the URL
       window.history.replaceState(null, '', window.location.pathname);
-
-      console.log('✅ Facebook token received, expires in', expiresIn, 'seconds');
+      console.log('✅ Facebook token received successfully');
       return { accessToken, expiresIn };
     }
 
-    // Check for error
-    const error = params.get('error');
-    const errorDescription = params.get('error_description');
     if (error) {
       window.history.replaceState(null, '', window.location.pathname);
       throw new Error(errorDescription || error);
