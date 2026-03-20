@@ -120,11 +120,37 @@ const App = () => {
     setLoading(true);
     setLoadingMsg(`กำลังค้นหากลุ่ม "${keyword}"...`);
     try {
-      const groups = await facebookService.searchGroups(keyword);
-      setSearchResults(groups);
-      showToast(`พบ ${groups.length} กลุ่ม`, 'success');
+      const data = await facebookService.searchGroups(keyword);
+      setSearchResults(data);
+      if (data.length === 0) {
+        showToast('ไม่พบกลุ่มสาธารณะ ลองใช้ปุ่ม "ค้นหาบน Facebook" แทน', 'info');
+      } else {
+        showToast(`พบ ${data.length} กลุ่ม`, 'success');
+      }
     } catch (e) {
       showToast('ค้นหาไม่สำเร็จ: ' + (e.message || e), 'error');
+    } finally {
+      setLoading(false);
+      setLoadingMsg('');
+    }
+  };
+
+  const handleAddManualGroup = async (idOrLink) => {
+    setLoading(true);
+    setLoadingMsg('กำลังเพิ่มกลุ่มด้วยตนเอง...');
+    try {
+      const groupData = await facebookService.getGroupDetails(idOrLink);
+      // Add to results if not already present
+      setSearchResults(prev => {
+        if (prev.some(g => g.id === groupData.id)) {
+          showToast('กลุ่มนี้อยู่ในรายการแล้ว', 'info');
+          return prev;
+        }
+        showToast(`เพิ่มกลุ่ม "${groupData.name}" แล้ว`, 'success');
+        return [groupData, ...prev];
+      });
+    } catch (e) {
+      showToast(`ไม่สามารถเพิ่มกลุ่มได้: ${e.message}`, 'error');
     } finally {
       setLoading(false);
       setLoadingMsg('');
@@ -276,6 +302,7 @@ const App = () => {
                 <GroupSearch 
                   results={searchResults} 
                   onSearch={handleSearch} 
+                  onAddManualGroup={handleAddManualGroup}
                   isLoading={loading}
                   selectedGroups={selectedGroups}
                   onToggleSelect={handleToggleSelect}

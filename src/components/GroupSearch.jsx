@@ -2,42 +2,83 @@ import React, { useState } from 'react';
 import { FaSearch, FaUsers, FaLock, FaGlobe, FaPlus, FaCheck, FaPaperPlane, FaExternalLinkAlt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GroupSearch = ({ results, onSearch, isLoading, selectedGroups, onToggleSelect, onLoadMyGroups }) => {
+const GroupSearch = ({ results, onSearch, isLoading, selectedGroups, onToggleSelect, onLoadMyGroups, onAddManualGroup }) => {
   const [keyword, setKeyword] = useState('');
+  const [manualInput, setManualInput] = useState('');
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (keyword.trim()) onSearch(keyword);
   };
 
+  const handleManualAdd = (e) => {
+    e.preventDefault();
+    if (manualInput.trim()) {
+      onAddManualGroup(manualInput.trim());
+      setManualInput('');
+    }
+  };
+
   const isSelected = (groupId) => selectedGroups.some(g => g.id === groupId);
 
   return (
     <div style={{ marginTop: '20px' }}>
-      {/* Search Box */}
-      <div className="glass-card" style={{ padding: '25px', marginBottom: '25px' }}>
-        <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
-          <FaSearch size={16} color="var(--primary)" />
-          ค้นหากลุ่มเป้าหมาย
-        </h3>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, position: 'relative', minWidth: '200px' }}>
+      {/* Search & Add Box */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
+        {/* Keyword Search */}
+        <div className="glass-card" style={{ padding: '20px' }}>
+          <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem' }}>
+            <FaSearch size={14} color="var(--primary)" />
+            ค้นหาด้วย Keyword (กลุ่มที่เป็นสมาชิก)
+          </h3>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input 
+                type="text" 
+                placeholder="เช่น ขายของ, Marketing..." 
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                style={{ paddingLeft: '38px', fontSize: '0.9rem' }}
+              />
+              <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '13px' }} />
+            </div>
+            <button type="submit" className="btn-primary" disabled={isLoading} style={{ padding: '0 15px' }}>
+              <FaSearch />
+            </button>
+          </form>
+          <button 
+            type="button" 
+            className="btn-outline" 
+            onClick={onLoadMyGroups} 
+            disabled={isLoading} 
+            style={{ width: '100%', marginTop: '12px', fontSize: '0.85rem' }}
+          >
+            📋 โหลดกลุ่มทั้งหมดของฉัน
+          </button>
+        </div>
+
+        {/* Manual Add by Link */}
+        <div className="glass-card" style={{ padding: '20px' }}>
+          <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1rem' }}>
+            <FaPlus size={14} color="var(--secondary)" />
+            เพิ่มกลุ่มด้วยลิงก์ (รวดเร็ว)
+          </h3>
+          <form onSubmit={handleManualAdd} style={{ display: 'flex', gap: '10px' }}>
             <input 
               type="text" 
-              placeholder="พิมพ์คำค้นหา เช่น ขายของออนไลน์, Freelance, Marketing..." 
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              style={{ paddingLeft: '42px' }}
+              placeholder="วางลิงก์กลุ่ม หรือ ID กลุ่ม..." 
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              style={{ flex: 1, fontSize: '0.9rem' }}
             />
-            <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '14px' }} />
-          </div>
-          <button type="submit" className="btn-primary" disabled={isLoading} style={{ whiteSpace: 'nowrap' }}>
-            {isLoading ? '🔄 กำลังค้นหา...' : '🔍 ค้นหากลุ่ม'}
-          </button>
-          <button type="button" className="btn-outline" onClick={onLoadMyGroups} disabled={isLoading} style={{ whiteSpace: 'nowrap' }}>
-            📋 โหลดกลุ่มของฉัน
-          </button>
-        </form>
+            <button type="submit" className="btn-secondary" disabled={isLoading} style={{ padding: '0 15px' }}>
+              เพิ่ม
+            </button>
+          </form>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '10px' }}>
+            เหมาะสำหรับ: กลุ่มที่ค้นหาไม่เจอ แต่คุณมี URL ของกลุ่มนั้นๆ
+          </p>
+        </div>
       </div>
 
       {/* Results Count */}
@@ -107,12 +148,9 @@ const GroupSearch = ({ results, onSearch, isLoading, selectedGroups, onToggleSel
                         </span>
                       )}
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        {group.privacy === 'OPEN' ? <FaGlobe size={11} /> : <FaLock size={11} />}
-                        {group.privacy === 'OPEN' ? 'สาธารณะ' : 'ส่วนตัว'}
+                        {group.privacy === 'OPEN' || group.privacy === 'Public' ? <FaGlobe size={11} /> : <FaLock size={11} />}
+                        {(group.privacy === 'OPEN' || group.privacy === 'Public') ? 'สาธารณะ' : 'ส่วนตัว'}
                       </span>
-                      {group.administrator && (
-                        <span style={{ color: '#ffc107', fontSize: '0.7rem' }}>👑 Admin</span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -146,9 +184,25 @@ const GroupSearch = ({ results, onSearch, isLoading, selectedGroups, onToggleSel
       </div>
 
       {results.length === 0 && !isLoading && (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-          <FaSearch size={40} style={{ opacity: 0.3, marginBottom: '15px' }} />
-          <p>ค้นหากลุ่มด้วย keyword หรือกด "โหลดกลุ่มของฉัน" เพื่อเริ่มใช้งาน</p>
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <FaSearch size={40} style={{ opacity: 0.1, marginBottom: '20px', color: 'white' }} />
+          <h4 style={{ color: 'white', marginBottom: '10px' }}>ไม่พบผลลัพธ์การค้นหา?</h4>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '450px', margin: '0 auto 25px auto' }}>
+            เนื่องจากข้อจำกัดของ Facebook API ระบบไม่สามารถค้นหากลุ่มสาธารณะภายนอกด้วย Keyword ได้โดยตรง
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+            <button 
+              className="btn-primary" 
+              onClick={() => window.open(`https://www.facebook.com/search/groups?q=${encodeURIComponent(keyword || 'ค้นหากลุ่ม')}`, '_blank')}
+            >
+              🔍 ค้นหาบน Facebook.com
+            </button>
+            <button 
+              className="btn-outline" 
+              onClick={onLoadMyGroups}
+            >
+              📋 โหลดกลุ่มของฉัน
+          </div>
         </div>
       )}
     </div>

@@ -202,6 +202,19 @@ class FacebookService {
     return this.graphPost(`/${groupId}/feed`, params);
   }
 
+  // ─── Group Details ───────────────────────────────────────────
+  async getGroupDetails(groupId) {
+    // Clean ID if it's a URL
+    let id = groupId;
+    if (id.includes('facebook.com/groups/')) {
+      id = id.split('facebook.com/groups/')[1].split('/')[0].split('?')[0];
+    }
+    
+    return this.graphGet(`/${id}`, {
+      fields: 'id,name,privacy,member_count,picture.width(200).height(200)'
+    });
+  }
+
   // ─── Batch Post ──────────────────────────────────────────────
   async batchPost(groupIds, message, link = null, delayMs = 3000, onProgress = null) {
     const results = [];
